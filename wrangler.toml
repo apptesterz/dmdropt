@@ -1,0 +1,80 @@
+name = "dmdropt"
+main = "src/index.ts"
+compatibility_date = "2026-08-01"
+compatibility_flags = ["nodejs_compat"]
+
+# The instance lives at <name>.<subdomain>.workers.dev.
+workers_dev = true
+
+# Preview URLs publish an extra public address for every deployed version.
+# Disabled deliberately: this is a single-operator production instance, so the
+# extra addresses are surface with no purpose — and they would not match the
+# OAuth redirect URI registered with Meta anyway. Exactly one address in play.
+preview_urls = false
+
+# Everything below sits inside Cloudflare's free tier for a single creator:
+#   Workers 100k req/day · D1 5GB · Queues 10k ops/day
+#   Durable Objects 100k req/day · Cron Triggers (max 5)
+
+[[d1_databases]]
+# `binding` is the name the CODE uses (env.DB) and must stay "DB".
+# Cloudflare's create output suggests the database name as the binding — ignore
+# that suggestion; renaming this breaks every query in src/lib/db.ts.
+binding = "DB"
+database_name = "dmdrop"
+database_id = "c2840831-200c-4e30-b33a-cd76e4518834"
+
+[[queues.producers]]
+binding = "SENDS"
+queue = "dmdrop-sends"
+
+[[queues.consumers]]
+queue = "dmdrop-sends"
+# One at a time. The bottleneck is a per-account hourly ceiling at the
+# platform, never our own throughput — extra concurrency would only mean more
+# workers contending for the same reservations.
+max_batch_size = 1
+max_concurrency = 2
+# Our failure taxonomy decides what to retry and when. Platform retries would
+# fight it, so they are effectively disabled here.
+max_retries = 0
+
+[[durable_objects.bindings]]
+name = "RATE"
+class_name = "RateLimiter"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["RateLimiter"]
+
+[triggers]
+# Token refresh and follower snapshots. Long-lived tokens expire in 60 days;
+# refreshing daily means an instance can be offline for weeks and still recover.
+crons = ["17 3 * * *"]
+
+[vars]
+IG_GRAPH_VERSION = "v25.0"
+# The easy-connect broker. A self-hoster who wants no intermediary at all can
+# point this at their own, or simply use their own Meta app and never call it.
+BROKER_URL = "https://connect.dmdrop.in"
+# Records when a licence is first used, which is what makes the refund policy's
+# "full refund before activation" provable rather than arguable. Fire-and-forget
+# with a 3 second timeout — an instance whose owner blocks this keeps working.
+ACTIVATION_ENDPOINT = "https://connect.dmdrop.in/activation"
+
+# Per-buyer build stamp, printed by tools/issue-licence.mjs at purchase time and
+# set here when packaging that buyer's download. Disclosed in licence clause 6.
+# Left as "unstamped" on our own instance, which is the honest value for a build
+# that was never issued to anyone.
+BUILD_ID = "unstamped"
+IG_PRIVATE_REPLY_HOURLY_CAP = "750"
+MONTHLY_SEND_CAP = "2000000000"
+
+# Secrets — set with `wrangler secret put NAME`, never in this file:
+#   SESSION_SECRET          random 32+ bytes, signs session cookies
+#   TOKEN_ENCRYPTION_KEY    64 hex chars, encrypts platform tokens at rest
+#   IG_APP_ID
+#   IG_APP_SECRET
+#   IG_WEBHOOK_VERIFY_TOKEN
+#   ADMIN_PASSWORD_HASH     produced by the setup wizard
+#   LICENCE_KEY

@@ -1,0 +1,43 @@
+dmdrop
+Copyright © 2026 Suman Shekhar Devadiga. All rights reserved.
+
+Proprietary software. Licensed, not sold. See LICENSE.md for the terms.
+
+Source is provided because self-hosting requires it. This does NOT make the
+software open source. Redistribution, resale, sublicensing, and publishing the
+source are prohibited — see clause 5 of LICENSE.md.
+
+---
+
+Third-party code included in this distribution: none.
+
+All source in this repository was written independently from a written
+specification. Dependencies are consumed through the package manager under their
+own licenses and are not redistributed here.
+
+This project is an independent implementation of a well-known idea
+(keyword-triggered private replies to social media comments). It is not derived
+from, affiliated with, or endorsed by any existing product in this category, nor
+by Meta Platforms or Instagram.
+
+---
+
+Each copy of this software carries a build identifier tied to the purchase it
+was issued for. This is disclosed to every licensee in clause 6 of LICENSE.md.
+It affects no functionality and transmits nothing on its own.
+
+Inter
+-----
+This product bundles the Inter typeface (latin subset, variable weight 400-800)
+at src/lib/font.ts, served from /f/inter.woff2.
+
+Inter is Copyright (c) 2016 The Inter Project Authors, licensed under the SIL
+Open Font License, Version 1.1. The full licence is available at
+https://openfontlicense.org and at https://github.com/rsms/inter/blob/master/LICENSE.txt
+
+The OFL permits bundling and redistribution as part of this software. The font
+is not sold on its own, and it is not renamed.
+
+To regenerate the subset:
+  curl "https://fonts.googleapis.com/css2?family=Inter:wght@400..800&display=swap"
+  # take the final (latin) woff2 URL, download it, then base64 it into font.ts
